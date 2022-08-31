@@ -38,7 +38,7 @@ public:
 
     virtual const Port *getPort(const int moduleID, const std::string &name);
     Port *findPort(const Port &p) const;
-    Port *findPort(const int moduleID, const std::string &name) const;
+    Port *findPort(const int moduleID, const std::string &name, Port::Type type = Port::ANY) const;
 
     std::vector<std::string> getPortNames(const int moduleID, Port::Type type) const;
     std::vector<std::string> getInputPortNames(const int moduleID) const;

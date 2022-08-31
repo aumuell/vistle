@@ -180,14 +180,21 @@ std::vector<message::Buffer> PortTracker::removePort(const Port &p)
     return ret;
 }
 
-Port *PortTracker::findPort(const int moduleID, const std::string &name) const
+Port *PortTracker::findPort(const int moduleID, const std::string &name, Port::Type type) const
 {
     ModulePortMap::const_iterator i = m_ports.find(moduleID);
 
     if (i != m_ports.end()) {
         PortMap::iterator pi = i->second->find(name);
-        if (pi != i->second->end())
+        if (pi != i->second->end()) {
+            if (type != Port::ANY && pi->second->getType() != type) {
+                CERR << "found port with matching name, but different type: id=" << moduleID << ", name=" << name
+                     << ", type searched=" << type << ", found=" << pi->second->getType() << std::endl;
+                return nullptr;
+            }
+
             return pi->second;
+        }
     }
 
     return nullptr;
