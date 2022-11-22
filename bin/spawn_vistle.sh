@@ -113,6 +113,7 @@ if mpirun -version 2>&1| grep -q open-mpi\.org; then
    export OMPI_MCA_mpi_abort_print_stack=1
    export OMPI_MCA_mpi_param_check=1
    export OMPI_MCA_mpi_show_handle_leaks=1
+   export OMPI_MCA_fs_ufs_lock_algorithm=1
    #export OMPI_MCA_mpi_yield_when_idle=1
    export OMPI_MCA_memory=^patcher # for valgrind on haswell
 elif mpirun -version 2>&1| grep -q MPT; then
