@@ -18,7 +18,7 @@ bool adaptive_wait(bool work, const void *client)
 
     const long Sec = 1000000; // 1 s
     const long MinDelay = Sec / 10000;
-    const long MaxDelay = Sec / 100;
+    const long MaxDelay = Sec / 10;
 
     long delay = 0, idletime = 0;
     try {
