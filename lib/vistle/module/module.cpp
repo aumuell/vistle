@@ -365,6 +365,9 @@ Module::Module(const std::string &moduleName, const int moduleId, mpi::communica
     errmodes.push_back("Console & GUI");
     setParameterChoices(em, errmodes);
 
+    addIntParameter("_validate_objects", "validate data objects before sending to port", m_validateObjects,
+                    Parameter::Boolean);
+
     auto outrank = addIntParameter("_error_output_rank", "rank from which to show stderr (-1: all ranks)", -1);
     setParameterRange<Integer>(outrank, -1, size() - 1);
 
@@ -1015,7 +1018,16 @@ bool Module::passThroughObject(Port *port, vistle::Object::const_ptr object)
     m_withOutput.insert(port);
 
     object->refresh();
-    assert(object->check());
+    std::stringstream str;
+    bool ok = object->check(str, m_validateObjects);
+    if (!ok) {
+        std::stringstream str2;
+        str2 << "validation failed for object " << object->getName() << " on port " << port->getName() << std::endl;
+        str2 << "   " << *object << std::endl;
+        str2 << "   " << str.str();
+        sendError(str2.str());
+        return false;
+    }
 
     message::AddObject message(port->getName(), object);
     sendMessage(message);
@@ -1248,6 +1260,8 @@ bool Module::changeParameter(const Parameter *p)
             m_prioritizeVisible = getIntParameter("_prioritize_visible");
         } else if (name == "_use_result_cache") {
             enableResultCaches(getIntParameter(name));
+        } else if (name == "_validate_objects") {
+            m_validateObjects = getIntParameter(name);
         }
     }
 
