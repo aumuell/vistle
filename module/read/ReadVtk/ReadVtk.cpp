@@ -150,7 +150,7 @@ VtkFile readFile(const std::string &filename, int piece = -1, const ReadOptions 
 
             if (result.pointfields.empty() && result.cellfields.empty()) {
                 reader->Update();
-                result.dataset = reader->GetOutput();
+                result.dataset = vtkSmartPointer<vtkDataObject>::Take(reader->GetOutput());
                 if (auto ds = vtkDataSet::SafeDownCast(result.dataset)) {
                     result.pointfields = getFields<vtkFieldData>(ds->GetPointData());
                     if (result.pointfields.empty())
@@ -158,7 +158,7 @@ VtkFile readFile(const std::string &filename, int piece = -1, const ReadOptions 
                     result.cellfields = getFields<vtkFieldData>(ds->GetCellData());
                 }
             } else {
-                result.dataset = reader->GetOutput();
+                result.dataset = vtkSmartPointer<vtkDataObject>::Take(reader->GetOutput());
             }
         }
         return result;
@@ -179,7 +179,7 @@ VtkFile readFile(const std::string &filename, int piece = -1, const ReadOptions 
 
     if (reader->GetOutput()) {
         reader->GetOutput()->Register(reader);
-        result.dataset = reader->GetOutput();
+        result.dataset = vtkSmartPointer<vtkDataObject>::Take(reader->GetOutput());
     }
     return result;
 }
@@ -642,6 +642,8 @@ bool ReadVtk::load(Token &token, const std::string &filename, const ReadOptions 
             token.addObject(m_pointPort[i], field);
         }
     }
+
+    ds_pieces.dataset = nullptr;
 
     return true;
 }
