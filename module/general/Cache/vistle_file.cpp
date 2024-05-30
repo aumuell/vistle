@@ -22,7 +22,11 @@ namespace {
 
 auto constexpr file_endian = little_endian;
 
-ssize_t swrite(int fd, const void *buf, size_t n)
+template<typename FileDes>
+ssize_t swrite(FileDes fd, const void *buf, size_t n);
+
+template<>
+ssize_t swrite<int>(int fd, const void *buf, size_t n)
 {
     size_t tot = 0;
     while (tot < n) {
@@ -37,7 +41,11 @@ ssize_t swrite(int fd, const void *buf, size_t n)
     return tot;
 }
 
-ssize_t sread(int fd, void *buf, size_t n)
+template<typename FileDes>
+ssize_t sread(FileDes fd, void *buf, size_t n);
+
+template<>
+ssize_t sread<int>(int fd, void *buf, size_t n)
 {
     size_t tot = 0;
     while (tot < n) {
@@ -56,8 +64,8 @@ ssize_t sread(int fd, void *buf, size_t n)
 
 } // namespace
 
-template<class T>
-bool Write(int fd, const T &t)
+template<class T, typename FileDes>
+bool Write(FileDes fd, const T &t)
 {
     T tt = byte_swap<host_endian, file_endian>(t);
     ssize_t n = swrite(fd, &tt, sizeof(tt));
@@ -70,8 +78,8 @@ bool Write(int fd, const T &t)
     return true;
 }
 
-template<class T>
-bool Read(int fd, T &t)
+template<class T, typename FileDes>
+bool Read(FileDes fd, T &t)
 {
     T tt;
     ssize_t n = sread(fd, &tt, sizeof(tt));
@@ -87,7 +95,11 @@ bool Read(int fd, T &t)
     return true;
 }
 
-bool Skip(int fd, size_t skip)
+template<typename FileDes>
+bool Skip(FileDes fd, size_t skip);
+
+template<>
+bool Skip<int>(int fd, size_t skip)
 {
     off_t n = lseek(fd, skip, SEEK_CUR);
     if (n == off_t(-1)) {
@@ -98,8 +110,8 @@ bool Skip(int fd, size_t skip)
     return true;
 }
 
-template<>
-bool Write<shm_name_t>(int fd, const shm_name_t &name)
+template<typename FileDes>
+bool Write(FileDes fd, const shm_name_t &name)
 {
     ssize_t n = swrite(fd, &name[0], sizeof(name));
     if (n == -1) {
@@ -110,8 +122,8 @@ bool Write<shm_name_t>(int fd, const shm_name_t &name)
     return true;
 }
 
-template<>
-bool Read<shm_name_t>(int fd, shm_name_t &name)
+template<typename FileDes>
+bool Read(FileDes fd, shm_name_t &name)
 {
     ssize_t n = sread(fd, &name[0], sizeof(name));
     if (n == -1) {
@@ -133,8 +145,8 @@ std::ostream &operator<<(std::ostream &os, const ChunkHeader &ch)
 }
 #endif
 
-template<>
-bool Write<ChunkHeader>(int fd, const ChunkHeader &h)
+template<typename FileDes>
+bool Write(FileDes fd, const ChunkHeader &h)
 {
     ssize_t n = swrite(fd, h.Vistle, sizeof(h.Vistle));
     if (n != sizeof(h.Vistle))
@@ -152,8 +164,8 @@ bool Write<ChunkHeader>(int fd, const ChunkHeader &h)
     return true;
 }
 
-template<>
-bool Read<ChunkHeader>(int fd, ChunkHeader &h)
+template<typename FileDes>
+bool Read(FileDes fd, ChunkHeader &h)
 {
     const ChunkHeader hgood;
     ssize_t n = sread(fd, h.Vistle, sizeof(h.Vistle));
@@ -184,8 +196,8 @@ std::ostream &operator<<(std::ostream &os, const ChunkFooter &cf)
 }
 #endif
 
-template<>
-bool Write<ChunkFooter>(int fd, const ChunkFooter &f)
+template<typename FileDes>
+bool Write(FileDes fd, const ChunkFooter &f)
 {
     if (!Write(fd, f.size))
         return false;
@@ -198,8 +210,8 @@ bool Write<ChunkFooter>(int fd, const ChunkFooter &f)
     return true;
 }
 
-template<>
-bool Read<ChunkFooter>(int fd, ChunkFooter &f)
+template<typename FileDes>
+bool Read(FileDes fd, ChunkFooter &f)
 {
     const ChunkFooter fgood;
     if (!Read(fd, f.size))
@@ -229,8 +241,8 @@ std::ostream &operator<<(std::ostream &os, const PortObjectHeader &poh)
 }
 #endif
 
-template<>
-bool Write<PortObjectHeader>(int fd, const PortObjectHeader &h)
+template<typename FileDes>
+bool Write(FileDes fd, const PortObjectHeader &h)
 {
     if (!Write(fd, h.version))
         return false;
@@ -246,8 +258,8 @@ bool Write<PortObjectHeader>(int fd, const PortObjectHeader &h)
     return true;
 }
 
-template<>
-bool Read<PortObjectHeader>(int fd, PortObjectHeader &h)
+template<typename FileDes>
+bool Read(FileDes fd, PortObjectHeader &h)
 {
     const PortObjectHeader hgood;
     if (!Read(fd, h.version))
@@ -276,8 +288,8 @@ struct ArchiveHeader {
     ArchiveHeader(const std::string &object): object(object) {}
 };
 
-template<>
-bool Write<ArchiveHeader>(int fd, const ArchiveHeader &h)
+template<typename FileDes>
+bool Write(FileDes fd, const ArchiveHeader &h)
 {
     if (!Write(fd, h.version))
         return false;
@@ -291,8 +303,8 @@ bool Write<ArchiveHeader>(int fd, const ArchiveHeader &h)
     return true;
 }
 
-template<>
-bool Read<ArchiveHeader>(int fd, ArchiveHeader &h)
+template<typename FileDes>
+bool Read(FileDes fd, ArchiveHeader &h)
 {
     const ArchiveHeader hgood;
     if (!Read(fd, h.version))
@@ -322,8 +334,8 @@ bool Read<ArchiveHeader>(int fd, ArchiveHeader &h)
 }
 
 #ifdef UNUSED
-template<>
-bool Write<std::string>(int fd, const std::string &s)
+template<typename FileDes>
+bool Write(FileDes fd, const std::string &s)
 {
     uint64_t l = s.length();
     if (!Write(fd, l)) {
@@ -339,8 +351,8 @@ bool Write<std::string>(int fd, const std::string &s)
     return true;
 }
 
-template<>
-bool Read<std::string>(int fd, std::string &s)
+template<typename FileDes>
+bool Read(FileDes fd, std::string &s)
 {
     uint64_t l;
     if (!Read(fd, l)) {
@@ -360,8 +372,8 @@ bool Read<std::string>(int fd, std::string &s)
     return true;
 }
 
-template<>
-bool Write<buffer>(int fd, const buffer &v)
+template<typename FileDes>
+bool Write(FileDes fd, const buffer &v)
 {
     uint64_t l = v.size();
     if (!Write(fd, l)) {
@@ -377,8 +389,8 @@ bool Write<buffer>(int fd, const buffer &v)
     return true;
 }
 
-template<>
-bool Read<buffer>(int fd, buffer &v)
+template<typename FileDes>
+bool Read(FileDes fd, buffer &v)
 {
     uint64_t l;
     if (!Read(fd, l)) {
@@ -409,8 +421,8 @@ struct ChunkTypeMap<PortObjectHeader> {
     static const ChunkType type = PortObject;
 };
 
-template<class Chunk>
-bool WriteChunk(ArchiveCompressionSettings *mod, int fd, const Chunk &chunk)
+template<class Chunk, typename FileDes>
+bool WriteChunk(ArchiveCompressionSettings *mod, FileDes fd, const Chunk &chunk)
 {
     ChunkHeader cheader;
     cheader.type = ChunkTypeMap<Chunk>::type;
@@ -432,8 +444,8 @@ bool WriteChunk(ArchiveCompressionSettings *mod, int fd, const Chunk &chunk)
     return true;
 }
 
-template<class Chunk>
-bool ReadChunk(ArchiveCompressionSettings *mod, int fd, const ChunkHeader &cheader, Chunk &chunk)
+template<class Chunk, typename FileDes>
+bool ReadChunk(ArchiveCompressionSettings *mod, FileDes fd, const ChunkHeader &cheader, Chunk &chunk)
 {
     if (cheader.type != ChunkTypeMap<Chunk>::type) {
         CERR << "ReadChunk: chunk type mismatch" << std::endl;
@@ -457,7 +469,8 @@ bool ReadChunk(ArchiveCompressionSettings *mod, int fd, const ChunkHeader &chead
     return true;
 }
 
-bool SkipChunk(ArchiveCompressionSettings *mod, int fd, const ChunkHeader &cheader)
+template<typename FileDes>
+bool SkipChunk(ArchiveCompressionSettings *mod, FileDes fd, const ChunkHeader &cheader)
 {
     if (!Skip(fd, cheader.size - sizeof(cheader) - sizeof(ChunkFooter)))
         return false;
@@ -477,8 +490,8 @@ bool SkipChunk(ArchiveCompressionSettings *mod, int fd, const ChunkHeader &chead
     return true;
 }
 
-template<>
-bool WriteChunk<SubArchiveDirectoryEntry>(ArchiveCompressionSettings *mod, int fd, const SubArchiveDirectoryEntry &ent)
+template<typename FileDes>
+bool WriteChunk(ArchiveCompressionSettings *mod, FileDes fd, const SubArchiveDirectoryEntry &ent)
 {
     message::CompressionMode comp = message::CompressionMode(mod->archiveCompression());
     int speed = mod->archiveCompressionSpeed();
@@ -551,9 +564,8 @@ bool WriteChunk<SubArchiveDirectoryEntry>(ArchiveCompressionSettings *mod, int f
     return true;
 }
 
-template<>
-bool ReadChunk<SubArchiveDirectoryEntry>(ArchiveCompressionSettings *mod, int fd, const ChunkHeader &cheader,
-                                         SubArchiveDirectoryEntry &ent)
+template<typename FileDes>
+bool ReadChunk(ArchiveCompressionSettings *mod, FileDes fd, const ChunkHeader &cheader, SubArchiveDirectoryEntry &ent)
 {
     if (cheader.type != ChunkTypeMap<SubArchiveDirectoryEntry>::type) {
         CERR << "failed to read entry type" << std::endl;
@@ -634,8 +646,14 @@ bool ReadChunk<SubArchiveDirectoryEntry>(ArchiveCompressionSettings *mod, int fd
     return true;
 }
 
-template bool WriteChunk<PortObjectHeader>(ArchiveCompressionSettings *, int, PortObjectHeader const &);
-template bool ReadChunk<PortObjectHeader>(ArchiveCompressionSettings *, int, ChunkHeader const &, PortObjectHeader &);
+template bool WriteChunk<PortObjectHeader, int>(ArchiveCompressionSettings *, int, PortObjectHeader const &);
+template bool WriteChunk<int>(ArchiveCompressionSettings *, int, SubArchiveDirectoryEntry const &);
+template bool ReadChunk<PortObjectHeader, int>(ArchiveCompressionSettings *, int, ChunkHeader const &,
+                                               PortObjectHeader &);
+
+template bool Read<int>(int, ChunkHeader &);
+template bool ReadChunk<int>(ArchiveCompressionSettings *, int, ChunkHeader const &, SubArchiveDirectoryEntry &);
 //template bool SkipChunk<PortObjectHeader>(ArchiveCompressionSettings *, int, ChunkHeader const &);
+template bool SkipChunk<int>(ArchiveCompressionSettings *mod, int fd, const ChunkHeader &cheader);
 
 } // namespace vistle

@@ -7,6 +7,8 @@
 
 namespace vistle {
 
+struct SubArchiveDirectoryEntry;
+
 class ArchiveCompressionSettings {
 public:
     virtual message::CompressionMode archiveCompression() const = 0;
@@ -44,22 +46,30 @@ struct PortObjectHeader {
     {}
 };
 
-template<class T>
-bool Read(int fd, T &t);
+template<class T, typename FileDes>
+bool Read(FileDes fd, T &t);
+template<typename FileDes>
+bool Read(FileDes fd, ChunkHeader &h);
 #if 0
-template<>
-bool Read<PortObjectHeader>(int fd, PortObjectHeader &h);
-template<>
-bool Read<shm_name_t>(int fd, shm_name_t &name);
+template<typename FileDes>
+bool Read(FileDes fd, PortObjectHeader &h);
+template<typenaame FileDes>
+bool Read(FileDes fd, shm_name_t &name);
 #endif
 
-template<class Chunk>
-bool WriteChunk(ArchiveCompressionSettings *mod, int fd, const Chunk &chunk);
+template<class Chunk, typename FileDes>
+bool WriteChunk(ArchiveCompressionSettings *mod, FileDes fd, const Chunk &chunk);
+template<typename FileDes>
+bool WriteChunk(ArchiveCompressionSettings *, FileDes fd, SubArchiveDirectoryEntry const &);
 
-template<class Chunk>
-bool ReadChunk(ArchiveCompressionSettings *mod, int fd, const ChunkHeader &cheader, Chunk &chunk);
+template<class Chunk, typename FileDes>
+bool ReadChunk(ArchiveCompressionSettings *mod, FileDes fd, const ChunkHeader &cheader, Chunk &chunk);
+template<typename FileDes>
+bool ReadChunk(ArchiveCompressionSettings *mod, FileDes fd, const ChunkHeader &cheader,
+               SubArchiveDirectoryEntry &chunk);
 
-bool SkipChunk(ArchiveCompressionSettings *mod, int fd, const ChunkHeader &cheader);
+template<typename FileDes>
+bool SkipChunk(ArchiveCompressionSettings *mod, FileDes fd, const ChunkHeader &cheader);
 
 } // namespace vistle
 #endif
