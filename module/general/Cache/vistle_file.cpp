@@ -7,16 +7,36 @@
 #include <vistle/util/byteswap.h>
 #include <vistle/util/fileio.h>
 
+#ifdef USE_MPIIO
+#include <mpi.h>
+#endif
+
 namespace vistle {
 
 //#define DEBUG
 //#define UNUSED
 
+#define CERR std::cerr << "vistle_file: "
+
+#ifdef USE_MPIIO
+MpiFd mpiOpen(MPI_Comm comm, const char *filename, int mode)
+{
+    MpiFd fd;
+    fd.comm = comm;
+    MPI_Info info;
+    int ret = MPI_File_open(comm, filename, mode, info, &fd.fh);
+    if (ret == MPI_SUCCESS) {
+        fd.valid = true;
+    } else {
+        CERR << "open: could not open " << filename << std::endl;
+    }
+    return fd;
+}
+#endif
+
 template<>
 bool Read<shm_name_t>(int fd, shm_name_t &name);
 
-
-#define CERR std::cerr << "vistle_file: "
 
 namespace {
 
@@ -41,6 +61,32 @@ ssize_t swrite<int>(int fd, const void *buf, size_t n)
     return tot;
 }
 
+#ifdef USE_MPIIO
+template<>
+ssize_t swrite<MpiFd>(MpiFd fd, const void *buf, size_t n)
+{
+    size_t tot = 0;
+    while (tot < n) {
+        MPI_Status status;
+        MPI_File_write(fd.fh, static_cast<const char *>(buf) + tot,
+                       std::max<size_t>(std::numeric_limits<int>::max(), n - tot), MPI_BYTE, &status);
+        if (status.MPI_ERROR != MPI_SUCCESS) {
+            CERR << "write error: " << status.MPI_ERROR << std::endl;
+            return -1;
+        }
+        int nwritten = 0;
+        MPI_Get_count(&status, MPI_BYTE, &nwritten);
+        if (nwritten < 0) {
+            CERR << "write error: negative count" << std::endl;
+            return -1;
+        }
+        tot += nwritten;
+    }
+
+    return tot;
+}
+#endif
+
 template<typename FileDes>
 ssize_t sread(FileDes fd, void *buf, size_t n);
 
@@ -62,6 +108,31 @@ ssize_t sread<int>(int fd, void *buf, size_t n)
     return tot;
 }
 
+#ifdef USE_MPIIO
+template<>
+ssize_t sread<MpiFd>(MpiFd fd, void *buf, size_t n)
+{
+    size_t tot = 0;
+    while (tot < n) {
+        MPI_Status status;
+        MPI_File_read(fd.fh, static_cast<char *>(buf) + tot, std::max<size_t>(std::numeric_limits<int>::max(), n - tot),
+                      MPI_BYTE, &status);
+        if (status.MPI_ERROR != MPI_SUCCESS) {
+            CERR << "read error: " << status.MPI_ERROR << std::endl;
+            return -1;
+        }
+        int nread = 0;
+        MPI_Get_count(&status, MPI_BYTE, &nread);
+        if (nread < 0) {
+            CERR << "read error: negative count" << std::endl;
+            return -1;
+        }
+        tot += nread;
+    }
+
+    return tot;
+}
+#endif
 } // namespace
 
 template<class T, typename FileDes>
