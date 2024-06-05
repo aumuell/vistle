@@ -13,13 +13,13 @@ namespace vistle {
 
 #ifdef USE_MPIIO
 struct MpiFd {
+    MpiFd(MPI_Comm comm, const char *filename, int mode);
+    ~MpiFd();
+
     MPI_Comm comm = MPI_COMM_NULL;
     MPI_File fh;
     bool valid = false;
 };
-
-MpiFd mpiOpen(MPI_Comm comm, const char *filename, int mode);
-
 #endif
 
 struct SubArchiveDirectoryEntry;

@@ -19,18 +19,22 @@ namespace vistle {
 #define CERR std::cerr << "vistle_file: "
 
 #ifdef USE_MPIIO
-MpiFd mpiOpen(MPI_Comm comm, const char *filename, int mode)
+MpiFd::MpiFd(MPI_Comm comm, const char *filename, int mode): comm(comm)
 {
-    MpiFd fd;
-    fd.comm = comm;
     MPI_Info info;
-    int ret = MPI_File_open(comm, filename, mode, info, &fd.fh);
+    int ret = MPI_File_open(comm, filename, mode, info, &fh);
     if (ret == MPI_SUCCESS) {
-        fd.valid = true;
+        valid = true;
     } else {
-        CERR << "open: could not open " << filename << std::endl;
+        CERR << "MpiFd: could not open " << filename << std::endl;
     }
-    return fd;
+}
+
+MpiFd::~MpiFd()
+{
+    if (valid) {
+        MPI_File_close(&fh);
+    }
 }
 #endif
 
