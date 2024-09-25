@@ -31,7 +31,6 @@ bool Indexed::checkImpl(std::ostream &os, bool quick) const
     VALIDATE_INDEX(d()->el->size());
     VALIDATE_INDEX(d()->ghost->size());
 
-
     VALIDATE(d()->el->check(os));
     VALIDATE(d()->cl->check(os));
     VALIDATE(d()->ghost->check(os));
@@ -40,7 +39,23 @@ bool Indexed::checkImpl(std::ostream &os, bool quick) const
     VALIDATE(el()[0] == 0);
     VALIDATE(d()->ghost->size() == 0 || d()->ghost->size() == getNumElements());
 
-    VALIDATE(el()[getNumElements()] <= getNumCorners());
+    if (!quick) {
+        VALIDATE_RANGE_P(d()->cl, 0, getSize() - 1);
+        VALIDATE_MONOTONIC_P(d()->el);
+        if (d()->cl->size() > 0) {
+            VALIDATE_RANGE_P(d()->el, 0, d()->cl->size());
+        }
+
+        if (hasCelltree()) {
+            VALIDATE(validateCelltree());
+        }
+
+        if (hasVertexOwnerList()) {
+            VALIDATE(getVertexOwnerList()->check(os));
+        }
+    }
+
+    VALIDATE(el()[getNumElements()] == getNumCorners());
     if (getNumElements() > 0) {
         VALIDATE(el()[getNumElements() - 1] <= getNumCorners());
     }
@@ -48,24 +63,6 @@ bool Indexed::checkImpl(std::ostream &os, bool quick) const
     if (getNumCorners() > 0) {
         VALIDATE(cl()[0] < getNumVertices());
         VALIDATE(cl()[getNumCorners() - 1] < getNumVertices());
-    }
-
-    if (quick)
-        return true;
-
-
-    VALIDATE_RANGE_P(d()->cl, 0, getSize() - 1);
-    VALIDATE_MONOTONIC_P(d()->el);
-    if (d()->cl->size() > 0) {
-        VALIDATE_RANGE_P(d()->el, 0, d()->cl->size());
-    }
-
-    if (hasCelltree()) {
-        VALIDATE(validateCelltree());
-    }
-
-    if (hasVertexOwnerList()) {
-        VALIDATE(getVertexOwnerList()->check(os));
     }
 
     return true;

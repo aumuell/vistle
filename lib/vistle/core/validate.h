@@ -8,12 +8,14 @@
 
 #define VALIDATE_2(condition, msg) \
     if (!(condition)) { \
+        os << std::flush; \
         os << "CONSISTENCY ERROR in " << __func__ << " at " << __FILE__ << ":" << __LINE__ << ": failing " \
            << #condition << " ***"; \
         if (!std::string(msg).empty()) \
             os << " " << msg << " ***" << std::endl; \
         os << std::endl; \
         print(os); \
+        os << std::flush; \
         std::stringstream str; \
         str << "CONSISTENCY ERROR in " << __func__ << " at " << __FILE__ << ":" << __LINE__ << ": failing " \
             << #condition << " ***"; \
