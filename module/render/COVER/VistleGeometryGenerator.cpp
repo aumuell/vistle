@@ -1022,7 +1022,7 @@ osg::Geode *VistleGeometryGenerator::operator()(osg::ref_ptr<osg::StateSet> defa
     }
     state->setName(nodename + ".state");
     if (material)
-        state->setAttribute(material);
+        state->setAttributeAndModes(material, osg::StateAttribute::ON);
 
     vistle::Normals::const_ptr normals = vistle::Normals::as(m_normal);
     if (normals) {
