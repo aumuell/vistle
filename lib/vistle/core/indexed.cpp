@@ -7,6 +7,8 @@
 #include <cassert>
 #include "validate.h"
 
+#define NEED_TO_USE_FULL_CONNECTIVITY
+
 namespace vistle {
 
 Indexed::Indexed(const size_t numElements, const size_t numCorners, const size_t numVertices, const Meta &meta)
@@ -55,7 +57,9 @@ bool Indexed::checkImpl(std::ostream &os, bool quick) const
         }
     }
 
+#ifdef NEED_TO_USE_FULL_CONNECTIVITY
     VALIDATE(el()[getNumElements()] == getNumCorners());
+#endif
     if (getNumElements() > 0) {
         VALIDATE(el()[getNumElements() - 1] <= getNumCorners());
     }

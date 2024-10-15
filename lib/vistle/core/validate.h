@@ -14,7 +14,7 @@
         if (!std::string(msg).empty()) \
             os << " " << msg << " ***" << std::endl; \
         os << std::endl; \
-        print(os); \
+        print(os, true); \
         os << std::flush; \
         std::stringstream str; \
         str << "CONSISTENCY ERROR in " << __func__ << " at " << __FILE__ << ":" << __LINE__ << ": failing " \
