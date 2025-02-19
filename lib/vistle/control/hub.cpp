@@ -1,5 +1,7 @@
 /*
- * Visualization Testing Laboratory for Exascale Computing (VISTLE)
+ * Vistle: this was started in 2012 by Florian Niebling as
+ * "Visualization Testing Laboratory for Exascale Computing (VISTLE)"
+ *
  */
 
 #include <iostream>
