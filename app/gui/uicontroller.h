@@ -81,6 +81,7 @@ private:
 
     VistleObserver m_observer;
     MainWindow *m_mainWindow = nullptr;
+    Module *m_vistleModule = nullptr;
 
     QString m_currentFile;
     int m_currentFileOnHub = vistle::message::Id::Invalid;

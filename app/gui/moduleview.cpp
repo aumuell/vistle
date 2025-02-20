@@ -111,6 +111,7 @@ void ModuleView::setId(int id)
     m_toolbar->setVisible(visible);
 
 #if 0
+    visible = true;
     ui->messagesLabel->setVisible(visible);
     //ui->actionDelete->setVisible(visible);
     //ui->actionDefaults->setVisible(visible);

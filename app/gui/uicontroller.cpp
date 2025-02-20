@@ -297,6 +297,13 @@ UiController::UiController(int argc, char *argv[], QObject *parent): QObject(par
         QDesktopServices::openUrl(QUrl(QString("https://vistle.io/module/%0/%1/%1.html").arg(cat, mod)));
     });
 
+    m_vistleModule = new Module(nullptr, "Vistle");
+    m_vistleModule->setId(vistle::message::Id::Vistle);
+    m_vistleModule->setHub(vistle::message::Id::MasterHub);
+    m_vistleModule->setStatus(Module::Status::INITIALIZED);
+    m_vistleModule->setMessagesVisibility(false);
+    m_vistleModule->setOutputStreaming(false);
+
     m_mainWindow->show();
 
     m_initialized = true;
@@ -583,12 +590,18 @@ void UiController::moduleSelectionChanged()
             m_mainWindow->moduleView()->setMessages(m->messages(), m->messagesVisible());
         }
     } else {
-        m_mainWindow->parameters()->setModule(vistle::message::Id::Vistle);
-        m_mainWindow->moduleView()->setId(vistle::message::Id::Vistle);
+        int id = vistle::message::Id::Vistle;
+        m_mainWindow->parameters()->setModule(id);
         title = QString("Session Parameters");
         m_mainWindow->parameters()->adjustSize();
         m_mainWindow->modulesDock()->show();
         m_mainWindow->modulesDock()->raise();
+
+        m_mainWindow->moduleView()->setId(id);
+        if (Module *m = m_vistleModule) {
+            m_mainWindow->moduleView()->setOutputStreaming(id, m->isOutputStreaming());
+            m_mainWindow->moduleView()->setMessages(m->messages(), m->messagesVisible());
+        }
     }
     m_mainWindow->moduleViewDock()->setWindowTitle(title);
 }
