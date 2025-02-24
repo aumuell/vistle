@@ -11,6 +11,7 @@
 /CMakeLists.txt.user*
 /compile_commands.json
 /test
+/workflow
 /*.log
 /*.vsl
 **/*.autosave
