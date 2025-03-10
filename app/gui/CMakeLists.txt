@@ -13,6 +13,7 @@ set(gui_SOURCES
     main.cpp
     mainwindow.cpp
     connection.cpp
+    editkeybindings.cpp
     module.cpp
     dataflownetwork.cpp
     errorindicator.cpp
@@ -33,6 +34,7 @@ set(gui_HEADERS
     connection.h
     dataflownetwork.h
     dataflowview.h
+    editkeybindings.h
     macosutils.h
     mainwindow.h
     modifieddialog.h
