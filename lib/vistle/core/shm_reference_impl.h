@@ -68,6 +68,7 @@ void shm_array_ref<T>::load(Archive &ar)
     if (obj) {
         //std::cerr << "obj " << obj->name << ": unresolved: " << name << std::endl;
         obj->unresolvedReference(true, arname, name);
+        m_name = name;
     }
 
     auto handler = ar.objectCompletionHandler();
