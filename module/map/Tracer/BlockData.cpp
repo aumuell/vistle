@@ -17,7 +17,7 @@ BlockData::BlockData(Index i, Object::const_ptr grid, Vec<Scalar, 3>::const_ptr 
 {
     m_transform = m_grid->getTransform();
     m_invTransform = m_transform.inverse();
-    m_velocityTransform = m_transform.block<3, 3>(0, 0);
+    m_velocityTransform = m_transform.block<3, 3>(0, 0).inverse().transpose();
 
     if (m_vecfld) {
         m_vx = m_vecfld->x().data();
