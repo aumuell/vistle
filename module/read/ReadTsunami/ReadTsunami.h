@@ -21,6 +21,7 @@
 #include <mutex>
 #include <vistle/module/reader.h>
 #include <vistle/core/layergrid.h>
+#include <vistle/netcdf/ncwrap.h>
 
 #include <pnetcdf>
 #include <vector>
