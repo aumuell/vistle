@@ -19,12 +19,14 @@
 
 //Include TecIO for szPLot:
 //extern "C" {
-#include "../../../lib/3rdparty/tecio/teciosrc/TecioPLT.h"
-#include "TECIO.h"
+#if !defined TECIOMPI
+#include <TecioPLT.h>
+#endif
+#include <TECIO.h>
 //#include <TecioSZL.h>
 //}
 #if defined TECIOMPI
-#include "mpi.h"
+#include <mpi.h>
 #endif
 //#include <qt6/QtCore/qcborvalue.h>
 
