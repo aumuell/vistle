@@ -111,6 +111,7 @@ if mpirun -version 2>&1| grep -q open-mpi\.org; then
    #export OMPI_MCA_btl_openib_if_include="mlx4_0:1"
    export OMPI_MCA_mpi_abort_delay=1
    #export OMPI_MCA_mpi_yield_when_idle=1
+   export OMPI_MCA_memory=^patcher # for valgrind on haswell
 elif mpirun -version 2>&1| grep -q MPT; then
    MPI_IMPL="mpt"
    #echo "HPE MPT spawn: $@"
