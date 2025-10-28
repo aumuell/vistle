@@ -454,6 +454,7 @@ def generateModuleDescriptions() -> None:
         _ = [f.write(essential_tags[tag](mod))
              for tag in sorted(unused_essential_tags)]
 
+    vistle.barrier("before quit")
     vistle.quit()
 
 
