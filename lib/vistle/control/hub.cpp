@@ -3734,6 +3734,7 @@ bool Hub::processScript()
         return true;
 
     bool doBarrier = m_barrierAfterLoad;
+    doBarrier = true;
 
     if (!ends_with(m_scriptPath, ".vsl") && !ends_with(m_scriptPath, ".py")) {
         boost::system::error_code ec;
