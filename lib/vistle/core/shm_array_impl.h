@@ -171,8 +171,9 @@ template<typename T, class allocator>
 void shm_array<T, allocator>::push_back(const T &v)
 {
     updateFromHandle(true);
-    if (m_size >= m_capacity)
-        reserve(m_capacity == 0 ? 1 : m_capacity * 2);
+    if (m_size >= m_capacity) {
+        reserve(m_capacity + m_capacity / 2 + 1);
+    }
     assert(m_size < m_capacity);
     new (&m_data[m_size]) T(v);
     ++m_size;
