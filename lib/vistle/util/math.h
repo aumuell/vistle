@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <numbers>
 
 namespace vistle {
 
@@ -62,6 +63,11 @@ inline S difference_of_products(S a, S b, S c, S d)
     S dop = std::fma(a, b, -cd);
     return dop + err;
 }
+
+namespace num {
+template<typename S>
+inline constexpr S Pi = std::numbers::pi_v<S>;
+} // namespace num
 
 } // namespace vistle
 #endif
