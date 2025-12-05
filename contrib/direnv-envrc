@@ -111,6 +111,14 @@ RelWithDebInfo|Release|MinSizeRel|RelSanitize|*)
     ;;
 esac
 
+case "$VISTLE_BUILD_TYPE" in
+*Sanitize)
+    if [ -z ${ASAN_OPTIONS+x} ]; then
+        export ASAN_OPTIONS=detect_container_overflow=false
+    fi
+    ;;
+esac
+
 if [ -n "${ARCHSUFFIX}" ]; then
     export ARCHSUFFIX
 fi
