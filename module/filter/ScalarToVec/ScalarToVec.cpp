@@ -9,6 +9,8 @@
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
 
+DEFINE_ENUM_WITH_STRING_CONVERSIONS(FillMode, (Zero)(One))
+
 using namespace vistle;
 
 ScalarToVec::ScalarToVec(const std::string &name, int moduleID, mpi::communicator comm): Module(name, moduleID, comm)
@@ -21,10 +23,14 @@ ScalarToVec::ScalarToVec(const std::string &name, int moduleID, mpi::communicato
     }
     linkPorts(m_scalarIn[0], m_vecOut);
     m_species = addStringParameter("species", "Species for output", "");
+
+    m_fillMode = addIntParameter("fill_mode", "How to fill missing components", FillMode::Zero, Parameter::Choice);
+    V_ENUM_SET_CHOICES(m_fillMode, FillMode);
 }
 
 bool ScalarToVec::compute()
 {
+    FillMode fillMode = static_cast<FillMode>(m_fillMode->getValue());
     Vec<Scalar>::const_ptr data_in[NumScalars]{};
     int found = -1;
     Index size = InvalidIndex;
@@ -82,7 +88,14 @@ bool ScalarToVec::compute()
             out->d()->x[i] = data_in[i]->d()->x[0];
             out->copyAttributes(data_in[i]);
         } else {
-            out->d()->x[i]->resize(size, 0);
+            switch (fillMode) {
+            case FillMode::Zero:
+                out->d()->x[i]->resize(size, 0);
+                break;
+            case FillMode::One:
+                out->d()->x[i]->resize(size, 1);
+                break;
+            }
         }
     }
     out->setGrid(data_in[found]->grid());

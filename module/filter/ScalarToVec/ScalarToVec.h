@@ -17,6 +17,7 @@ private:
     vistle::Port *m_scalarIn[NumScalars];
     vistle::Port *m_vecOut = nullptr;
     vistle::StringParameter *m_species = nullptr;
+    vistle::IntParameter *m_fillMode = nullptr;
 };
 
 #endif
