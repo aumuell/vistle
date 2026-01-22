@@ -84,5 +84,22 @@ public:
     }
 };
 
+class V_COREEXPORT Grid: public Object, public GridInterface {
+    V_OBJECT(Grid);
+
+public:
+    typedef Object Base;
+
+    Grid(const Meta &meta = Meta());
+
+    V_DATA_BEGIN(Grid);
+
+    Data(const std::string &name = "", const Meta &meta = Meta());
+    static Data *create(const Meta &meta = Meta());
+
+    V_DATA_END(Grid);
+};
+
+
 } // namespace vistle
 #endif
