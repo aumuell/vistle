@@ -560,7 +560,7 @@ GridDataContainer ReadFOAM::loadGrid(const std::string &meshdir, std::string top
                     index_t ia = cellfaces[j];
                     const auto &a = faces[ia];
 
-                    if (!isPointingInwards(ia, i, dim.internalFaces, (*owners), neighbours)) {
+                    if (isPointingInwards(ia, i, dim.internalFaces, (*owners), neighbours)) {
                         std::copy(a.rbegin(), a.rend(), inserter);
                         connectivities.push_back(*a.rbegin());
                     } else {
@@ -593,7 +593,7 @@ GridDataContainer ReadFOAM::loadGrid(const std::string &meshdir, std::string top
 
                     //vistle requires that the vertices-numbering of the first face conforms with the right hand rule (pointing into the cell)
                     //so the starting face is tested if it does and the numbering is reversed if it doesn't
-                    if (!isPointingInwards(ia, i, dim.internalFaces, (*owners), neighbours)) {
+                    if (isPointingInwards(ia, i, dim.internalFaces, (*owners), neighbours)) {
                         std::reverse(a.begin(), a.end());
                     }
 
@@ -641,7 +641,7 @@ GridDataContainer ReadFOAM::loadGrid(const std::string &meshdir, std::string top
 
                     std::vector<index_t> a = faces[ia];
 
-                    if (!isPointingInwards(ia, i, dim.internalFaces, (*owners), neighbours)) {
+                    if (isPointingInwards(ia, i, dim.internalFaces, (*owners), neighbours)) {
                         std::reverse(a.begin(), a.end());
                     }
 
@@ -660,7 +660,7 @@ GridDataContainer ReadFOAM::loadGrid(const std::string &meshdir, std::string top
 
                     std::vector<index_t> a = faces[ia];
 
-                    if (!isPointingInwards(ia, i, dim.internalFaces, (*owners), neighbours)) {
+                    if (isPointingInwards(ia, i, dim.internalFaces, (*owners), neighbours)) {
                         std::reverse(a.begin(), a.end());
                     }
 
@@ -672,7 +672,7 @@ GridDataContainer ReadFOAM::loadGrid(const std::string &meshdir, std::string top
                     index_t ia = cellfaces[0]; //use first face as starting face
                     std::vector<index_t> a = faces[ia];
 
-                    if (!isPointingInwards(ia, i, dim.internalFaces, (*owners), neighbours)) {
+                    if (isPointingInwards(ia, i, dim.internalFaces, (*owners), neighbours)) {
                         std::reverse(a.begin(), a.end());
                     }
 
