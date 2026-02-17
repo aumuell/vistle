@@ -1491,7 +1491,7 @@ bool Hub::dispatch()
     }
 
 
-    vistle::adaptive_wait(work);
+    vistle::adaptive_wait(work, this);
 
     if (ret == false) {
         if (m_verbose >= Verbosity::Manager) {
