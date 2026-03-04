@@ -3972,14 +3972,6 @@ bool Hub::handlePriv(const message::Execute &exec, const buffer *payload)
     } else {
         downstream = m_stateTracker.getDownstreamModules(exec);
     }
-    for (auto id: downstream) {
-        m_executePending.erase(id);
-        auto blockDownstream = make.message<message::Execute>(exec);
-        blockDownstream.setWhat(message::Execute::Upstream);
-        blockDownstream.setDestId(id);
-        blockDownstream.setModule(id);
-        sendModule(blockDownstream, id);
-    }
     // do not try to execute modules that do not cache input - extend upstream
     for (std::set<int> checkNow = m_executePending; !checkNow.empty();) {
         std::set<int> checkNext;
@@ -3998,10 +3990,20 @@ bool Hub::handlePriv(const message::Execute &exec, const buffer *payload)
                 continue;
             }
             for (auto u: us) {
+                downstream.insert(u);
                 checkNext.insert(u);
             }
         }
         checkNow = checkNext;
+    }
+    for (auto id: downstream) {
+        m_executePending.erase(id);
+        auto blockDownstream = make.message<message::Execute>(exec);
+        blockDownstream.clearPayload();
+        blockDownstream.setWhat(message::Execute::Upstream);
+        blockDownstream.setDestId(id);
+        blockDownstream.setModule(id);
+        sendModule(blockDownstream, id);
     }
     for (auto id: modules) {
         m_executePending.erase(id);
