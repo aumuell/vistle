@@ -761,14 +761,14 @@ bool Tracer::reduce(int timestep)
         // communicate
         Index num_send = sendlist.size();
         std::vector<Index> num_transmit(mpisize);
+        std::vector<std::vector<Index>> recvlist(mpisize);
         mpi::all_gather(comm(), num_send, num_transmit);
         for (int mpirank = 0; mpirank < mpisize; mpirank++) {
             Index num_recv = num_transmit[mpirank];
             if (num_recv == 0)
                 continue;
 
-            std::vector<Index> recvlist;
-            auto &curlist = rank() == mpirank ? sendlist : recvlist;
+            auto &curlist = rank() == mpirank ? sendlist : recvlist[mpirank];
             mpi::broadcast(comm(), curlist, mpirank);
             assert(curlist.size() == num_recv);
             for (Index i = 0; i < num_recv; i++) {
@@ -779,7 +779,32 @@ bool Tracer::reduce(int timestep)
                 if (p->rank() == rank() && rank() != mpirank) {
                     datarecvlist.emplace_back(p->id(), mpirank);
                 }
-                int r = p->searchRank(comm());
+            }
+        }
+
+        // start searching for rank of particles
+        for (int mpirank = 0; mpirank < mpisize; mpirank++) {
+            Index num_recv = num_transmit[mpirank];
+
+            auto &curlist = rank() == mpirank ? sendlist : recvlist[mpirank];
+            assert(curlist.size() == num_recv);
+            for (Index i = 0; i < num_recv; i++) {
+                Index p_index = curlist[i];
+                auto p = allParticles[p_index];
+                p->initiateRankSearch(rank() == mpirank);
+            }
+        }
+
+        // agree on responsible rank and update local and active particle lists
+        for (int mpirank = 0; mpirank < mpisize; mpirank++) {
+            Index num_recv = num_transmit[mpirank];
+
+            auto &curlist = rank() == mpirank ? sendlist : recvlist[mpirank];
+            assert(curlist.size() == num_recv);
+            for (Index i = 0; i < num_recv; i++) {
+                Index p_index = curlist[i];
+                auto p = allParticles[p_index];
+                int r = p->finishRankSearch(comm());
                 if (r < 0) {
                     p->Deactivate(OutOfDomain);
                 } else if (r == rank()) {
@@ -791,7 +816,6 @@ bool Tracer::reduce(int timestep)
         numActiveMax = mpi::all_reduce(comm(), activeParticles.size() + localParticles.size(), mpi::maximum<Index>());
 
         std::copy(sendlist.begin(), sendlist.end(), std::back_inserter(datasendlist));
-        //std::cerr << "recvlist: " << datarecvlist.size() << ", sendlist: " << sendlist.size() << ", #active="<<activeParticles.size() << std::endl;
     } while (numActiveMax > 0);
 
     if (mpisize > 1) {
@@ -849,12 +873,6 @@ bool Tracer::reduce(int timestep)
         if (numtime < 1)
             numtime = 1;
         numout = numtime;
-    }
-
-    for (auto &p: allParticles) {
-        if (p->rank() == rank()) {
-            p->simplifySegments();
-        }
     }
 
     while (global.points.size() < numout && global.lines.size() < numout) {
