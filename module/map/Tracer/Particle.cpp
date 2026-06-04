@@ -341,7 +341,7 @@ template<class S>
 void Particle<S>::finishSegment()
 {
     if (m_currentSegment) {
-        m_currentSegment->simplify(m_global.simplification_error);
+        //m_currentSegment->simplify(m_global.simplification_error);
         m_segments[m_currentSegment->m_num] = m_currentSegment;
         m_currentSegment.reset();
     }

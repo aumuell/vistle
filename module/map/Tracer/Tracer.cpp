@@ -742,6 +742,7 @@ bool Tracer::reduce(int timestep)
                     sendlist.push_back(particle->id());
                 }
                 activeParticles.erase(it);
+                particle->finishSegment();
             }
         }
 
@@ -763,26 +764,26 @@ bool Tracer::reduce(int timestep)
         mpi::all_gather(comm(), num_send, num_transmit);
         for (int mpirank = 0; mpirank < mpisize; mpirank++) {
             Index num_recv = num_transmit[mpirank];
-            if (num_recv > 0) {
-                std::vector<Index> recvlist;
-                auto &curlist = rank() == mpirank ? sendlist : recvlist;
-                mpi::broadcast(comm(), curlist, mpirank);
-                assert(curlist.size() == num_recv);
-                for (Index i = 0; i < num_recv; i++) {
-                    Index p_index = curlist[i];
-                    auto p = allParticles[p_index];
-                    assert(!p->isTracing(false));
-                    p->broadcast(comm(), mpirank);
-                    if (p->rank() == rank() && rank() != mpirank) {
-                        datarecvlist.emplace_back(p->id(), mpirank);
-                    }
-                    p->finishSegment();
-                    int r = p->searchRank(comm());
-                    if (r < 0) {
-                        p->Deactivate(OutOfDomain);
-                    } else if (r == rank()) {
-                        localParticles.emplace(p);
-                    }
+            if (num_recv == 0)
+                continue;
+
+            std::vector<Index> recvlist;
+            auto &curlist = rank() == mpirank ? sendlist : recvlist;
+            mpi::broadcast(comm(), curlist, mpirank);
+            assert(curlist.size() == num_recv);
+            for (Index i = 0; i < num_recv; i++) {
+                Index p_index = curlist[i];
+                auto p = allParticles[p_index];
+                assert(!p->isTracing(false));
+                p->broadcast(comm(), mpirank);
+                if (p->rank() == rank() && rank() != mpirank) {
+                    datarecvlist.emplace_back(p->id(), mpirank);
+                }
+                int r = p->searchRank(comm());
+                if (r < 0) {
+                    p->Deactivate(OutOfDomain);
+                } else if (r == rank()) {
+                    localParticles.emplace(p);
                 }
             }
         }
@@ -793,11 +794,7 @@ bool Tracer::reduce(int timestep)
         //std::cerr << "recvlist: " << datarecvlist.size() << ", sendlist: " << sendlist.size() << ", #active="<<activeParticles.size() << std::endl;
     } while (numActiveMax > 0);
 
-    if (mpisize == 1) {
-        for (auto p: allParticles) {
-            p->finishSegment();
-        }
-    } else {
+    if (mpisize > 1) {
         // iterate over all other ranks
         for (int i = 1; i < mpisize; ++i) {
             // start sending particles to owning rank
@@ -852,6 +849,12 @@ bool Tracer::reduce(int timestep)
         if (numtime < 1)
             numtime = 1;
         numout = numtime;
+    }
+
+    for (auto &p: allParticles) {
+        if (p->rank() == rank()) {
+            p->simplifySegments();
+        }
     }
 
     while (global.points.size() < numout && global.lines.size() < numout) {
