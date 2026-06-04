@@ -128,6 +128,7 @@ public:
     void fetchSegments(Particle &other); //! move segments from other particle to this one
     void addToOutput();
     vistle::Scalar time() const;
+    void simplifySegments();
 
 private:
     bool findCell(double time);

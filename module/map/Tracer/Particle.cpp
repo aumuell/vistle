@@ -374,6 +374,14 @@ inline Scalar interp(Scalar f, const Scalar f0, const Scalar f1)
 }
 
 template<class S>
+void Particle<S>::simplifySegments()
+{
+    for (auto &seg: m_segments) {
+        seg.second->simplify(m_global.simplification_error);
+    }
+}
+
+template<class S>
 void Particle<S>::addToOutput()
 {
     const bool second_order = true;
